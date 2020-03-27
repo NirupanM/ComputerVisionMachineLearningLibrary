@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+        <title>Level 2</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
+        
+        <style>
+        </style>
+        <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <script src="https://stackml.com/library-js/stackml.min.js"></script>
+      </head>
+
+<body>
+<h4 class="text-center mt-5">Censor Image Level 2</h4>
+<!-- <p>The model recognized the image as <span id="className">...</span> with a confidence of <span id="probability">!!!</span></p> -->
+<!-- <img src="https://s3-us-west-2.amazonaws.com/stackml/docs/images/red_fox.jpeg" crossorigin="anonymous" id="red_fox" width="500"> -->
+
+<div class="ml-5">
+<input type="file" onchange="previewFile()" class="mt-5 mb-5 btn">
+</div>
+<br>
+<div class="row ml-5">
+<img id="original_image" src="http://placehold.it/180" height="350" class="ml-1">
+
+<img id="emoji_smile" src="https://www.pngfind.com/pngs/m/10-102223_download-slightly-smiling-emoji-icon-emojis-png-ios.png" style="display: none;" /> 
+<canvas style="margin: 0 auto; width: auto; height: 350px; display: block;" id="outputCanvas" width="256" height="256" class="ml-1">
+  <!-- <div id="emoji">Smile</div> -->
+</canvas>
+<!-- <canvas style="margin: 0 auto; width: auto; height: 350px; display: block;" id="outputCanvas2" width="256" height="256" class="ml-1"></canvas> -->
+<div id="outer_container">
+<div id="face_container">
+
+</div>
+<button id="censor-image" type="button" class="btn btn-dark btn-sm mt-5 ml-4" onclick="censorImage()" >Add Emoji</button>  
+</div>
+
+<img id="emoji_smile" src="https://www.pngfind.com/pngs/m/10-102223_download-slightly-smiling-emoji-icon-emojis-png-ios.png" style="display: none;" /> 
+
+</div>
+</div>
+
+<script>
+
+//var toggleVisibility = false;
+
+document.getElementById("censor-image").style.display = "none";
+
+
+    function previewFile() {
+  var preview = document.querySelector('img');
+  var file    = document.querySelector('input[type=file]').files[0];
+  var reader  = new FileReader();
+
+  reader.addEventListener("load", function () {
+    preview.src = reader.result;
+  }, false);
+
+  if (file) {
+    reader.readAsDataURL(file);
+    callStackML();
+  }
+}
+
+function censorImage(){
+  
+  var resultOutputs = JSON.parse(localStorage.getItem("results-output"));
+
+
+
+  var checkboxArray = [];
+
+  for(var ro in resultOutputs){
+    //while(ro<=(resultOutputs.length-1)){
+      var str = "check"+ro;
+    //console.log((document.getElementById(str)).checked);
+    if((document.getElementById(str)).checked){
+      var c = document.getElementById("outputCanvas");
+        var ctx = c.getContext("2d");
+        var img = document.getElementById("emoji_smile");
+        //var imgData = ctx.getImageData( results.outputs[ro].box.x, results.outputs[ro].box.y, results.outputs[ro].box.width, results.outputs[ro].box.height);
+        //ctx2.putImageData(imgData, 0, 0);
+        ctx.drawImage(img, resultOutputs[ro].box.x, resultOutputs[ro].box.y, resultOutputs[ro].box.width, resultOutputs[ro].box.height);
+
+    }
+    //}
+
+  }
+
+}
+
+
+
+
+
+
+    async function callStackML() {
+        
+
+
+    
+    await stackml.init({'accessKeyId': '42c7494f7dbf8c052e57b9a7d5dcdc21'});
+// load face detection model
+const model = await stackml.faceDetection(callbackLoad);
+
+// make prediction with the image
+model.detect(document.querySelector('img'), callbackPredict);
+
+function callbackLoad() {
+    console.log('callback after face detection model is loaded!');
+}
+
+// callback after prediction
+function callbackPredict(err, results) {
+    console.log(results);
+
+    // draw output keypoints in the image
+    model.draw(document.getElementById('outputCanvas'), document.querySelector('img'), results);
+
+    for (var ro in results.outputs){
+
+
+        var div = document.createElement('div');
+        div.id="sub-title";
+        div.innerHTML="";
+        var checkbox = document.createElement('input');
+        checkbox.type = "checkbox";
+        checkbox.name = "name";
+        checkbox.value = "value";
+        checkbox.setAttribute('class', 'col-md-2');
+        checkbox.id = "check"+ro.toString();
+
+        // var label = document.createElement('label')
+        // label.htmlFor = ro.toString();
+        // label.setAttribute('class', 'col-md-2');
+        // label.appendChild(document.createTextNode('text for label after checkbox'));
+
+        var canv = document.createElement('canvas');
+        canv.setAttribute('class', 'col-md-4');
+        canv.id = 'canvas'+ro.toString();
+        var ctx2 = canv.getContext("2d");
+
+        var c = document.getElementById("outputCanvas");
+        var ctx = c.getContext("2d");
+        var imgData = ctx.getImageData( results.outputs[ro].box.x, results.outputs[ro].box.y, results.outputs[ro].box.width, results.outputs[ro].box.height);
+        ctx2.putImageData(imgData, 0, 0);
+
+
+                // var button = document.createElement("button");
+                // button.innerHTML = "Add Emoji";
+                // button.id = 'button'+ro.toString();
+                // button.setAttribute('class','btn btn-sm btn-default');
+                localStorage.setItem('results-output',JSON.stringify(results.outputs));
+
+
+        document.getElementById("face_container").appendChild(div);
+       document.getElementById("face_container").appendChild(checkbox);
+        // document.getElementById("face_container").appendChild(label);
+        document.getElementById("face_container").appendChild(canv);
+        // document.getElementById("face_container").appendChild(button);
+
+  
+
+        if(ro==((results.outputs.length)-1)){
+          
+          document.getElementById("censor-image").style.display = "block";
+  
+        }
+
+
+    }
+    
+  
+}
+
+    
+
+
+    }
+
+
+
+    
+    
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+        <title>Level 3</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
+        
+        <style>
+        </style>
+        <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <script src="https://stackml.com/library-js/stackml.min.js"></script>
+      </head>
+
+<body>
+<h4 class="text-center mt-5">Censor Image Level 3</h4>
+<!-- <p>The model recognized the image as <span id="className">...</span> with a confidence of <span id="probability">!!!</span></p> -->
+<!-- <img src="https://s3-us-west-2.amazonaws.com/stackml/docs/images/red_fox.jpeg" crossorigin="anonymous" id="red_fox" width="500"> -->
+
+<div class="ml-5">
+<input type="file" onchange="previewFile()" class="mt-5 mb-5 btn">
+</div>
+<br>
+<div class="row ml-5">
+<img id="orginal_image" src="http://placehold.it/180" height="350" class="ml-1">
+
+<img id="emoji_happy" src="https://www.pngfind.com/pngs/m/10-102223_download-slightly-smiling-emoji-icon-emojis-png-ios.png" style="display: none;" /> 
+<img id="emoji_sad" src="https://images.vexels.com/media/users/3/134884/isolated/lists/48e6880a62eaa4c1da1cbbc0880804ec-worry-sad-emoji-emoticon.png" style="display: none"/>
+<!-- <img id="emoji_confused" src="http://www.i2symbol.com/pictures/emojis/c/6/0/e/c60e666a9af7bcd1a7b887437b3520c3_384.png" style="display: none"/> -->
+<img id="emoji_angry" src="https://cdn.shopify.com/s/files/1/1061/1924/products/Super_Angry_Face_Emoji_ios10_large.png?v=1542436021" style="display: none"/>
+<img id="emoji_neutral" src="https://s3.amazonaws.com/pix.iemoji.com/images/emoji/apple/ios-12/256/neutral-face.png" style="display: none"/>
+<img id="emoji_fearful" src="https://s3.amazonaws.com/pix.iemoji.com/images/emoji/apple/ios-12/256/fearful-face.png" style="display: none"/>
+<img id="emoji_disgusted" src="https://i.pinimg.com/originals/26/b5/20/26b520bfaf04664d88e9b1daad68c551.jpg" style="display: none" />
+<img id="emoji_surprised" src="https://i.pinimg.com/originals/b1/13/6c/b1136c912e6cfa93b3e1463db47bb508.png" style="display: none" />
+<canvas style="margin: 0 auto; width: auto; height: 350px; display: block;" id="outputCanvas" width="256" height="256" class="ml-1">
+  <!-- <div id="emoji">Smile</div> -->
+</canvas>
+</div>
+</div>
+
+<script>
+
+
+
+    function previewFile() {
+  var preview = document.querySelector('img');
+  var file    = document.querySelector('input[type=file]').files[0];
+  var reader  = new FileReader();
+
+  reader.addEventListener("load", function () {
+    preview.src = reader.result;
+  }, false);
+
+  if (file) {
+    reader.readAsDataURL(file);
+    callStackML();
+  }
+}
+
+    async function callStackML() {
+        
+
+        await stackml.init({'accessKeyId': '42c7494f7dbf8c052e57b9a7d5dcdc21'});
+// load Face Expression Recognition model
+const model = await stackml.faceExpression(callbackLoad);
+
+// make prediction with the image
+model.detect(document.getElementById('orginal_image'), callbackPredict);
+
+function callbackLoad() {
+    console.log('callback after face expression model is loaded!');
+}
+
+// callback after prediction
+function callbackPredict(err, results) {
+    console.log(results);
+    model.draw(document.getElementById('outputCanvas'), document.getElementById('orginal_image'), results);
+
+    // draw output keypoints in the image
+    for(var i in results.outputs){
+        var maximumProb = 0;
+        var matchingExpression;
+        for(var j in results.outputs[i].expressions){
+            if(maximumProb<results.outputs[i].expressions[j].probability){
+                maximumProb = results.outputs[i].expressions[j].probability;
+                matchingExpression  =  results.outputs[i].expressions[j].expression;
+            }
+            
+        }
+
+        if(matchingExpression=='surprised'){
+                var c = document.getElementById("outputCanvas");
+    var ctx = c.getContext("2d");
+    var img = document.getElementById("emoji_surprised");
+    ctx.drawImage(img, results.outputs[i].detection.box.x, results.outputs[i].detection.box.y, results.outputs[i].detection.box.width, results.outputs[i].detection.box.height);
+
+            }
+
+            if(matchingExpression=='neutral'){
+                var c = document.getElementById("outputCanvas");
+    var ctx = c.getContext("2d");
+    var img = document.getElementById("emoji_neutral");
+    ctx.drawImage(img, results.outputs[i].detection.box.x, results.outputs[i].detection.box.y, results.outputs[i].detection.box.width, results.outputs[i].detection.box.height);
+
+            }
+
+            if(matchingExpression=='happy'){
+                var c = document.getElementById("outputCanvas");
+    var ctx = c.getContext("2d");
+    var img = document.getElementById("emoji_happy");
+    ctx.drawImage(img, results.outputs[i].detection.box.x, results.outputs[i].detection.box.y, results.outputs[i].detection.box.width, results.outputs[i].detection.box.height);
+
+            }
+
+            if(matchingExpression=='sad'){
+                var c = document.getElementById("outputCanvas");
+    var ctx = c.getContext("2d");
+    var img = document.getElementById("emoji_sad");
+    ctx.drawImage(img, results.outputs[i].detection.box.x, results.outputs[i].detection.box.y, results.outputs[i].detection.box.width, results.outputs[i].detection.box.height);
+
+            }
+            if(matchingExpression=='angry'){
+                var c = document.getElementById("outputCanvas");
+    var ctx = c.getContext("2d");
+    var img = document.getElementById("emoji_neutral");
+    ctx.drawImage(img, results.outputs[i].detection.box.x, results.outputs[i].detection.box.y, results.outputs[i].detection.box.width, results.outputs[i].detection.box.height);
+
+            }
+
+            if(matchingExpression=='disgusted'){
+                var c = document.getElementById("outputCanvas");
+    var ctx = c.getContext("2d");
+    var img = document.getElementById("emoji_neutral");
+    ctx.drawImage(img, results.outputs[i].detection.box.x, results.outputs[i].detection.box.y, results.outputs[i].detection.box.width, results.outputs[i].detection.box.height);
+
+            }
+            if(matchingExpression=='fearful'){
+                var c = document.getElementById("outputCanvas");
+    var ctx = c.getContext("2d");
+    var img = document.getElementById("emoji_fearful");
+    ctx.drawImage(img, results.outputs[i].detection.box.x, results.outputs[i].detection.box.y, results.outputs[i].detection.box.width, results.outputs[i].detection.box.height);
+
+            }
+        
+    }
+
+}
+
+    
+    }
+</script>
+</body>
+</html>

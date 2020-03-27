@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+        <title>Level 1</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
+        
+        <style>
+        </style>
+        <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <script src="https://stackml.com/library-js/stackml.min.js"></script>
+      </head>
+
+<body>
+<h4 class="text-center mt-5">Censor Image Level 1</h4>
+<!-- <p>The model recognized the image as <span id="className">...</span> with a confidence of <span id="probability">!!!</span></p> -->
+<!-- <img src="https://s3-us-west-2.amazonaws.com/stackml/docs/images/red_fox.jpeg" crossorigin="anonymous" id="red_fox" width="500"> -->
+
+<div class="ml-5">
+<input type="file" onchange="previewFile()" class="mt-5 mb-5 btn">
+</div>
+<br>
+<div class="row ml-5">
+<img id="orginal_image" src="http://placehold.it/180" height="350" class="ml-1">
+
+<img id="emoji_smile" src="https://www.pngfind.com/pngs/m/10-102223_download-slightly-smiling-emoji-icon-emojis-png-ios.png" style="display: none;" /> 
+<canvas style="margin: 0 auto; width: auto; height: 350px; display: block;" id="outputCanvas" width="256" height="256" class="ml-1">
+  <!-- <div id="emoji">Smile</div> -->
+</canvas>
+</div>
+</div>
+
+<script>
+
+
+
+    function previewFile() {
+  var preview = document.querySelector('img');
+  var file    = document.querySelector('input[type=file]').files[0];
+  var reader  = new FileReader();
+
+  reader.addEventListener("load", function () {
+    preview.src = reader.result;
+  }, false);
+
+  if (file) {
+    reader.readAsDataURL(file);
+    callStackML();
+  }
+}
+
+    async function callStackML() {
+        
+
+    await stackml.init({'accessKeyId': '42c7494f7dbf8c052e57b9a7d5dcdc21'});
+    // load Face Landmark Detection model
+    const model = await stackml.faceLandmark(callbackLoad);
+
+    // make prediction with the image
+    model.detect(document.querySelector('img'), callbackPredict);
+
+    function callbackLoad() {
+        console.log('callback after face landmark detection model is loaded!');
+    }
+
+    // callback after prediction
+    function callbackPredict(err, results) {
+        
+
+    console.log(results);
+
+        // draw output keypoints in the image
+    model.draw(document.getElementById('outputCanvas'), document.querySelector('img'), results);
+
+
+    var c = document.getElementById("outputCanvas");
+    var ctx = c.getContext("2d");
+    var img = document.getElementById("emoji_smile");
+    ctx.drawImage(img, results.outputs[0].detection.box.x, results.outputs[0].detection.box.y, results.outputs[0].detection.box.width, results.outputs[0].detection.box.height);
+        
+
+    }
+
+    
+    }
+</script>
+</body>
+</html>
